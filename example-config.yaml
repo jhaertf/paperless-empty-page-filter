@@ -1,0 +1,18 @@
+# Beispiel-Config für Paperless-ngx docker-compose.yml
+environment:
+  - PRE_CONSUME_SCRIPT=/opt/docker/paperless/scripts/preconsume_empty_pages.py
+  - PRE_CONSUME_LOG_FILE=/tmp/preconsume.log
+  - PRE_CONSUME_LOG_LEVEL=INFO
+
+  # Standard-Filter für gescannte Dokumente
+  - PRE_CONSUME_THRESHOLD=5
+  - PRE_CONSUME_WHITE_RATIO=0.98
+  - PRE_CONSUME_DPI=150
+  - PRE_CONSUME_DOWNSCALE=6
+  - PRE_CONSUME_WHITE_CUTOFF=251
+
+  # Rand-Entfernung für Scan-Rahmen
+  - PRE_CONSUME_CROP_LEFT_PX=15
+  - PRE_CONSUME_CROP_RIGHT_PX=15
+  - PRE_CONSUME_CROP_TOP_PX=20
+  - PRE_CONSUME_CROP_BOTTOM_PX=20
