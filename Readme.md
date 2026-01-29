@@ -1,142 +1,166 @@
-# 📄 Paperless-ngx: Automatisches Entfernen leerer PDF-Seiten
+# Paperless Empty Page Filter
 
-> **Filtere automatisch leere, weiße oder fast-leere Seiten aus PDF-Dokumenten – bevor sie in Paperless-ngx archiviert werden.**
+This repository provides a **pre-consume script for Paperless-ngx** that
+automatically removes **blank, white, or nearly empty pages** from PDF
+files before they are stored in the Paperless-ngx document archive.
 
-Mit diesem **Pre-consume Script** für Paperless-ngx entfernst du automatisch Seiten, die fast komplett weiß sind – z. B. leere Rückseiten von Dokumenten, Scan-Rahmen oder ungewollte Zwischenblätter.  
-Das spart Speicherplatz, beschleunigt die Suche und verhindert unnötige Dokumente im Archiv.
+It is designed for scanned documents where blank back pages, scan
+borders, or empty sheets are common.
 
----
+------------------------------------------------------------------------
 
-## ✅ Warum das nützt
+## 🚀 Features
 
-- **Keine leeren Seiten** im Archiv – saubere Dokumente.
-- **Automatisch**: Läuft im Hintergrund, sobald ein PDF hochgeladen wird.
-- **Konfigurierbar**: Thresholds, Crop-Ränder, Downsampling – perfekt für Scans.
-- **Sicher**: Falls Fehler, bleibt das Original erhalten (Fallback).
-- **Open Source & MIT-lizenziert** – frei nutzbar für Privat-, Firmen- und Bildungszwecke.
+-   Detects blank or nearly blank pages based on pixel analysis\
+-   Works as a Paperless-ngx **pre-consume hook**\
+-   Fully configurable via environment variables\
+-   Optional cropping before detection\
+-   Safe fallback: original PDF is kept if processing fails\
+-   MIT licensed
 
----
+------------------------------------------------------------------------
 
-## ⚙️ Installation & Einbindung in Paperless-ngx
+## 🧠 Algorithm Overview
 
-### 1. **Script speichern**
+1.  Each page is rendered to an image (configurable DPI).
+2.  Image is optionally cropped.
+3.  Image is downscaled for faster processing.
+4.  Pixels above a brightness threshold are considered "white".
+5.  The ratio of white pixels is calculated.
+6.  If the ratio exceeds the configured limit, the page is removed.
+7.  Remaining pages are merged into a new PDF.
 
-Lade das Script herunter und speichere es z. B. als:
+------------------------------------------------------------------------
 
-```bash
-/opt/docker/paperless/paperless-ngx/scripts/preconsume_empty_pages.py
+## 📦 Requirements
+
+-   Python 3.9+
+-   pillow
+-   pypdf
+-   pdf2image
+-   numpy
+
+Install dependencies manually:
+
+``` bash
+pip install pillow pypdf pdf2image numpy
 ```
 
-Stelle sicher, dass es ausführbar ist:
+------------------------------------------------------------------------
 
-```bash
-chmod +x /opt/docker/paperless/paperless-ngx/scripts/preconsume_empty_pages.py
+## ⚙️ Installation
+
+1.  Clone this repository:
+
+``` bash
+git clone https://github.com/jhaertf/paperless-empty-page-filter.git
 ```
 
-### 2. **Paperless-ngx Konfiguration (docker-compose.yml)**
+2.  Make the script executable:
 
-Füge im `paperless-ngx`-Service die folgenden **Environment-Variablen** hinzu:
+``` bash
+chmod +x preconsume_empty_pages.py
+```
 
-```yaml
+3.  Configure it as pre-consume script in Paperless-ngx.
+
+Example (Docker Compose):
+
+``` yaml
 environment:
-  - PRE_CONSUME_SCRIPT=/opt/docker/paperless/paperless-ngx/scripts/preconsume_empty_pages.py
-  - PRE_CONSUME_LOG_FILE=/tmp/preconsume.log
-  - PRE_CONSUME_LOG_LEVEL=INFO
-
-  # Anpassbare Parameter (Standardwerte)
-  - PRE_CONSUME_THRESHOLD=5
-  - PRE_CONSUME_WHITE_RATIO=0.98
-  - PRE_CONSUME_DPI=150
-  - PRE_CONSUME_DOWNSCALE=6
-  - PRE_CONSUME_WHITE_CUTOFF=251
-
-  # Optional: Rand-Cropping für Scan-Rahmen
-  - PRE_CONSUME_CROP_PERCENT=0.04
-  - PRE_CONSUME_CROP_PX=0
-  - PRE_CONSUME_CROP_LEFT_PX=15
-  - PRE_CONSUME_CROP_RIGHT_PX=15
-  - PRE_CONSUME_CROP_TOP_PX=20
-  - PRE_CONSUME_CROP_BOTTOM_PX=20
+  PRE_CONSUME_SCRIPT: /scripts/preconsume_empty_pages.py
 ```
 
-> 💡 **Tipp**: Die Variablen beginnen mit `PRE_CONSUME_` – damit sie nicht mit Paperless-Interne Variablen kollidieren.
+------------------------------------------------------------------------
 
-### 3. **Neustart Paperless-ngx**
+## 🧪 Standalone Usage (CLI)
 
-```bash
-cd /opt/docker/paperless/paperless-ngx
-docker-compose down && docker-compose up -d
+You can also use the script without Paperless-ngx:
+
+``` bash
+python preconsume_empty_pages.py input.pdf output.pdf
 ```
 
-### 4. **Log-Datei prüfen**
+Example:
 
-```bash
-tail -f /tmp/preconsume.log
+``` bash
+python preconsume_empty_pages.py scan.pdf cleaned.pdf
 ```
 
-Nach dem Hochladen eines PDFs siehst du:
+------------------------------------------------------------------------
 
-```log
-[2026-01-29 21:34:12] INFO: Seite 3: entfernt (leer)
-[2026-01-29 21:34:12] INFO: Summary: behalten=5, entfernt=1
+## 🔧 Configuration
+
+All parameters can be set via environment variables:
+
+``` bash
+export PRE_CONSUME_WHITE_RATIO=0.985
+export PRE_CONSUME_WHITE_CUTOFF=250
+export PRE_CONSUME_DPI=150
+export PRE_CONSUME_DOWNSCALE=6
+export PRE_CONSUME_CROP_TOP=50
+export PRE_CONSUME_CROP_BOTTOM=50
 ```
 
----
+### Available Variables
 
-## 🎛️ Konfigurations-Parameter (Erklärung)
+  ---------------------------------------------------------------------------
+  Variable                   Default             Description
+  -------------------------- ------------------- ----------------------------
+  PRE_CONSUME_THRESHOLD      5                   Tolerance for near-white
+                                                 pixels
 
-| Variable | Default | Beschreibung |
-|--------|---------|--------------|
-| `PRE_CONSUME_THRESHOLD` | 5 | Wie weiß muss eine Seite sein? (0=black, 255=white) |
-| `PRE_CONSUME_WHITE_RATIO` | 0.98 | Anteil weißer Pixel, um als "leer" zu gelten |
-| `PRE_CONSUME_DPI` | 150 | Bildauflösung für Analyse (höher = genauer, aber langsamer) |
-| `PRE_CONSUME_DOWNSCALE` | 6 | Reduziert Bildgröße zur Performance (z. B. 150 DPI → 25 DPI) |
-| `PRE_CONSUME_WHITE_CUTOFF` | 251 | Ab welcher Helligkeit gilt ein Pixel als "weiß"? |
-| `PRE_CONSUME_CROP_PERCENT` | 0.04 | Prozentsatz, der von allen Seiten abgeschnitten wird |
-| `PRE_CONSUME_CROP_PX` | 0 | Pixel, die von allen Seiten abgeschnitten werden |
-| `PRE_CONSUME_CROP_LEFT_PX` | 15 | Spezifischer linken Rand (überwiegt `CROP_PX`) |
-| ... | ... | Alle `LEFT/RIGHT/TOP/BOTTOM`-Variablen funktionieren analog |
+  PRE_CONSUME_WHITE_RATIO    0.98                Minimum white area ratio to
+                                                 classify page as empty
 
-> ⚠️ **Tipp**: Bei gescannten Dokumenten mit Rahmen: `CROP_LEFT_PX=15`, `CROP_RIGHT_PX=15` → entfernt Rand-Abbildungen.
+  PRE_CONSUME_WHITE_CUTOFF   251                 Brightness threshold
 
----
+  PRE_CONSUME_DPI            150                 Render DPI
 
-## 📂 Beispiel: Log-Ausgabe
+  PRE_CONSUME_DOWNSCALE      6                   Downscale factor
 
-```log
-[2026-01-29 21:34:12] INFO: Starte Verarbeitung (v3: Rand-Cropping)
-[2026-01-29 21:34:12] INFO: Datei: /opt/docker/paperless/paperless-ngx/data/documents/12345.pdf
-[2026-01-29 21:34:12] INFO: Settings: dpi=150, threshold=5, white_ratio_min=0.98, downscale=6, white_cutoff=251
-[2026-01-29 21:34:12] INFO: Crop: crop_percent=0.04, crop_px=0, per-side(px) L/R/T/B=15/15/20/20
-[2026-01-29 21:34:13] INFO: Seite 1: behalten
-[2026-01-29 21:34:13] INFO: Seite 2: entfernt (leer)
-[2026-01-29 21:34:13] INFO: Summary: behalten=1, entfernt=1
-[2026-01-29 21:34:13] INFO: PDF aktualisiert: /opt/docker/paperless/paperless-ngx/data/documents/12345.pdf
+  PRE_CONSUME_CROP_LEFT      0                   Crop left
+
+  PRE_CONSUME_CROP_RIGHT     0                   Crop right
+
+  PRE_CONSUME_CROP_TOP       0                   Crop top
+
+  PRE_CONSUME_CROP_BOTTOM    0                   Crop bottom
+  ---------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 🧩 Code Example (Detection Logic)
+
+``` python
+white_pixels = np.sum(img_array >= white_cutoff)
+total_pixels = img_array.size
+white_ratio = white_pixels / total_pixels
+
+if white_ratio > white_ratio_threshold:
+    # page is considered empty and removed
 ```
 
----
+------------------------------------------------------------------------
 
-## 🔧 Troubleshooting
+## 🛡️ Error Handling
 
-- **Keine Änderung?** → Prüfe `/tmp/preconsume.log` – dort steht genau, was passiert.
-- **Zu viele Seiten entfernt?** → Setze `WHITE_RATIO` auf 0.95 oder niedriger.
-- **Kein Logging?** → Prüfe `PRE_CONSUME_LOG_FILE`-Pfad und Schreibrechte.
-- **PDF beschädigt?** → Das Script hat einen Fallback: Original bleibt unverändert, wenn etwas schiefgeht.
+If any exception occurs during processing: - The script logs the error -
+The original PDF is returned unchanged
 
----
+This ensures zero data loss.
 
-## 📜 Lizenz
+------------------------------------------------------------------------
 
-Dieses Projekt ist unter der **MIT-Lizenz** veröffentlicht – siehe [LICENSE](LICENSE).
+## 📄 Typical Use Cases
 
-Du darfst es frei verwenden, modifizieren und verteilen – auch kommerziell.
+-   Duplex scans with single-sided content\
+-   Large batch imports\
+-   Scanners that add trailing blank pages\
+-   Removing scan margins before OCR
 
----
+------------------------------------------------------------------------
 
-## ❤️ Mitwirken
+## 📜 License
 
-Falls du Verbesserungen hast – z. B. OCR-Integration, Bildvergleich oder Batch-Modus – erstelle einen Pull Request!
-
----
-
-> 💬 **Hinweis**: Dieses Script läuft als **Pre-consume Hook** in Paperless-ngx. Es wird **vor der Archivierung** ausgeführt – also direkt nach dem Upload.
+MIT License
