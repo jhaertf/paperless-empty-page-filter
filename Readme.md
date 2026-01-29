@@ -130,16 +130,60 @@ export PRE_CONSUME_CROP_BOTTOM=50
 
 ------------------------------------------------------------------------
 
-## 🧩 Code Example (Detection Logic)
+### 4. **Log-File**
 
-``` python
-white_pixels = np.sum(img_array >= white_cutoff)
-total_pixels = img_array.size
-white_ratio = white_pixels / total_pixels
-
-if white_ratio > white_ratio_threshold:
-    # page is considered empty and removed
+```bash
+tail -f /tmp/preconsume.log
 ```
+
+Example log file: 
+
+```log
+[2026-01-29 21:34:12] INFO: Seite 3: entfernt (leer)
+[2026-01-29 21:34:12] INFO: Summary: behalten=5, entfernt=1
+```
+
+---
+
+## 🎛️ Configuration Parameters (Explanation)
+
+| Variable | Default | Description |
+|--------|---------|-------------|
+| `PRE_CONSUME_THRESHOLD` | 5 | How white must a page be? (0 = black, 255 = white) |
+| `PRE_CONSUME_WHITE_RATIO` | 0.98 | Ratio of white pixels required to be considered "empty" |
+| `PRE_CONSUME_DPI` | 150 | Image resolution for analysis (higher = more accurate, but slower) |
+| `PRE_CONE_DOWNSCALE` | 6 | Reduces image size for performance (e.g. 150 DPI → 25 DPI) |
+| `PRE_CONSUME_WHITE_CUTOFF` | 251 | Brightness threshold at which a pixel is considered "white" |
+| `PRE_CONSUME_CROP_PERCENT` | 0.04 | Percentage cropped from all sides |
+| `PRE_CONSUME_CROP_PX` | 0 | Pixels cropped from all sides |
+| `PRE_CONSUME_CROP_LEFT_PX` | 15 | Specific left crop (overrides `CROP_PX`) |
+| ... | ... | All `LEFT/RIGHT/TOP/BOTTOM` variables work analogously |
+
+> ⚠️ **Tip**: For scanned documents with borders: `CROP_LEFT_PX=15`, `CROP_RIGHT_PX=15` → removes border artifacts.
+
+------------------------------------------------------------------------
+
+## 🔧 Troubleshooting
+
+- **No changes?** → Check `/tmp/preconsume.log` – it shows exactly what happened.
+- **Too many pages removed?** → Set `WHITE_RATIO` to 0.95 or lower.
+- **No logging?** → Check the `PRE_CONSUME_LOG_FILE` path and write permissions.
+- **Corrupted PDF?** → The script has a fallback: the original file is kept if something goes wrong.
+
+------------------------------------------------------------------------
+
+## 📜 License
+
+This project is released under the **MIT License** – see [LICENSE](LICENSE).
+
+You are free to use, modify, and distribute it – including for commercial purposes.
+
+------------------------------------------------------------------------
+
+## ❤️ Contributing
+
+If you have improvements – e.g. OCR integration, image comparison, or batch mode – feel free to open a pull request!
+
 
 ------------------------------------------------------------------------
 
@@ -164,3 +208,7 @@ This ensures zero data loss.
 ## 📜 License
 
 MIT License
+
+------------------------------------------------------------------------
+
+> 💬 **Note**: This script runs as a **pre-consume hook** in Paperless-ngx. It is executed **before archiving** – right after upload.
