@@ -102,31 +102,6 @@ export PRE_CONSUME_CROP_TOP=50
 export PRE_CONSUME_CROP_BOTTOM=50
 ```
 
-### Available Variables
-
-  ---------------------------------------------------------------------------
-  Variable                   Default             Description
-  -------------------------- ------------------- ----------------------------
-  PRE_CONSUME_THRESHOLD      5                   Tolerance for near-white
-                                                 pixels
-
-  PRE_CONSUME_WHITE_RATIO    0.98                Minimum white area ratio to
-                                                 classify page as empty
-
-  PRE_CONSUME_WHITE_CUTOFF   251                 Brightness threshold
-
-  PRE_CONSUME_DPI            150                 Render DPI
-
-  PRE_CONSUME_DOWNSCALE      6                   Downscale factor
-
-  PRE_CONSUME_CROP_LEFT      0                   Crop left
-
-  PRE_CONSUME_CROP_RIGHT     0                   Crop right
-
-  PRE_CONSUME_CROP_TOP       0                   Crop top
-
-  PRE_CONSUME_CROP_BOTTOM    0                   Crop bottom
-  ---------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
