@@ -4,7 +4,10 @@ import sys
 import logging
 import tempfile
 from pdf2image import convert_from_path
-from PyPDF2 import PdfReader, PdfWriter
+try:
+    from pypdf import PdfReader, PdfWriter
+except ModuleNotFoundError:
+    from PyPDF2 import PdfReader, PdfWriter
 
 PREFIX = "PRE_CONSUME_SCRIPT_"
 

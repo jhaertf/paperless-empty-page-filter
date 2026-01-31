@@ -145,13 +145,6 @@ Example log file:
 - **No logging?** → Check the `PRE_CONSUME_LOG_FILE` path and write permissions.
 - **Corrupted PDF?** → The script has a fallback: the original file is kept if something goes wrong.
 
-------------------------------------------------------------------------
-
-## 📜 License
-
-This project is released under the **MIT License** – see [LICENSE](LICENSE).
-
-You are free to use, modify, and distribute it – including for commercial purposes.
 
 ------------------------------------------------------------------------
 
@@ -182,7 +175,9 @@ This ensures zero data loss.
 
 ## 📜 License
 
-MIT License
+This project is released under the **MIT License** – see [LICENSE](LICENSE).
+
+You are free to use, modify, and distribute it – including for commercial purposes.
 
 ------------------------------------------------------------------------
 
